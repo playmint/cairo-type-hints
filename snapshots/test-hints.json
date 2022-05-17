@@ -1,0 +1,1 @@
+[{"name": "UserMeta", "members": [{"type": "int", "name": "index"}, {"type": "string", "name": "hash"}, {"type": "Position", "name": "position"}], "type": "struct"}, {"name": "get_user_by_index", "inputs": [{"type": "int", "name": "index"}, {"type": "Position", "name": "position"}], "outputs": [{"type": "User", "name": "user"}], "type": "function"}]
