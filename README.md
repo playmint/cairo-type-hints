@@ -8,7 +8,7 @@ pip install cairo-type-hints
 
 ## Example usage:
 ```bash
-python cairo-type-hints/console.py \
+python compile-cairo-type-hints \
     -i ./src/my-awesome-contract.cairo \
     -o ./artifacts/hints/test-hints.json
 ```

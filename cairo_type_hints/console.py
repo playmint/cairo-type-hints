@@ -1,3 +1,6 @@
+import getopt
+import sys
+
 import dataclasses
 import json
 import os
@@ -9,6 +12,7 @@ from lark import Lark, Tree
 struct_member_type_pattern = re.compile(r'^#: (int|string|address)$')
 function_inputs_pattern = re.compile(r'^#: \((.*?)\)')
 function_outputs_pattern = re.compile(r'^#: .* -> \((.*)\)')
+
 
 @dataclass
 class Parameter:
@@ -133,3 +137,51 @@ def parse(text):
     functions = [dataclasses.asdict(f) for f in functions]
 
     return json.dumps(structs + functions)
+
+
+def generate(inputfile, outputfile):
+    input = open(inputfile, "r")
+    fileContents = input.read()
+    result = parse(fileContents)
+    output = open(outputfile, "a")
+    output.write(result)
+    input.close()
+    output.close()
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+
+    input_file = ''
+    output_file = ''
+    try:
+        opts, args = getopt.getopt(argv, "hi:o:", ["input=", "output="])
+    except getopt.GetoptError:
+        print("test.py -i <inputfile> -o <outputfile>")
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            print("test.py -i <inputfile> -o <outputfile>")
+            sys.exit()
+        elif opt in ("-i", "--input"):
+            input_file = arg
+        elif opt in ("-o", "--output"):
+            output_file = arg
+        else:
+            print('cairo_type_hints.py --help')
+            sys.exit(2)
+
+    if input_file == "":
+        print("Input file not set")
+        sys.exit(2)
+
+    if output_file == "":
+        print("Output file not set")
+        sys.exit(2)
+
+    generate(input_file, output_file)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

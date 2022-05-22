@@ -1,9 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    include_package_data=True,
     name="cairo-type-hints",
-    version="0.1.0",
+    version="0.1.1",
     author="Chris Baker",
     author_email="lxufimdu@pm.me",
     description="Generate type hints for Cairo lang",
@@ -26,5 +25,8 @@ setup(
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3.7",
         "Topic :: Software Development"
-    ]
+    ],
+    entry_points={"console_scripts": ["compile-cairo-type-hints = cairo_type_hints.console:main"]},
+    package_data={"cairo_type_hints": ["cairo.ebnf"]},
+    include_package_data=True
 )
