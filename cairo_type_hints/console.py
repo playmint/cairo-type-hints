@@ -7,7 +7,10 @@ import os
 import re
 from dataclasses import dataclass
 
+import pkg_resources
+pkg_resources.require("lark==0.12.0")
 from lark import Lark, Tree
+
 
 struct_member_type_pattern = re.compile(r'^#: (int|string|address)$')
 function_inputs_pattern = re.compile(r'^#: \((.*?)\)')
@@ -39,7 +42,7 @@ grammar_file = os.path.join(os.path.dirname(__file__), "cairo.ebnf")
 parser = Lark(
     open(grammar_file, "r").read(),
     start="cairo_file",
-    lexer="basic",
+    lexer="standard",
     parser="lalr",
     propagate_positions=True
 )
@@ -60,21 +63,21 @@ def get_struct_members(tree: Tree):
     members = []
     for child in tree.children:
         if isinstance(child, Tree) and child.data == 'commented_code_element':
+            if child.children[0].data == 'code_element_member':
+                name = child.children[0].children[0].children[0].children[0].value
+                original_type = child.children[0].children[0].children[1].data
+                if original_type == 'type_struct':
+                    original_type = child.children[0].children[0].children[1].children[0].children[0].value
+                elif original_type == 'type_felt':
+                    original_type = 'string'
 
-            name = child.children[0].children[0].children[0].children[0].value
-            original_type = child.children[0].children[0].children[1].data
-            if original_type == 'type_struct':
-                original_type = child.children[0].children[0].children[1].children[0].children[0].value
-            elif original_type == 'type_felt':
-                original_type = 'string'
+                type_hint = parse_parameter_hint(child.children[1].value if len(child.children) > 1 and child.children[1] is not None else None)
+                type = type_hint if type_hint is not None else original_type
 
-            type_hint = parse_parameter_hint(child.children[1].value if child.children[1] is not None else None)
-            type = type_hint if type_hint is not None else original_type
-
-            members.append(Parameter(
-                name=name,
-                type=type
-            ))
+                members.append(Parameter(
+                    name=name,
+                    type=type
+                ))
     return members
 
 
@@ -91,11 +94,11 @@ def handle_struct(tree: Tree):
 
 def get_function_parameters(comment, pattern):
     if comment is None:
-        return comment
+        return []
 
     matches = pattern.match(comment)
     if matches is None:
-        return None
+        return []
 
     parameters = []
     raw_inputs = matches.group(1).split(',')
@@ -114,14 +117,22 @@ def handle_function(tree: Tree):
         if isinstance(child, Tree) and child.data == 'identifier_def':
             name = child.children[0].value
         if isinstance(child, Tree) and child.data == 'code_block':
-            type_hint = child.children[0].children[1].value
-            inputs += get_function_parameters(type_hint, function_inputs_pattern)
-            outputs += get_function_parameters(type_hint, function_outputs_pattern)
+            # Check for empty function body / storage vars
+            if len(child.children) == 0:
+                continue
+
+            if len(child.children[0].children) > 1:
+                type_hint = child.children[0].children[1].value
+                inputs += get_function_parameters(type_hint, function_inputs_pattern)
+                outputs += get_function_parameters(type_hint, function_outputs_pattern)
             pass
     return Function(name=name, inputs=inputs, outputs=outputs)
 
 
 def parse(text):
+    if not text.endswith("\n"):
+        text += "\n"
+
     parse_tree: Tree = parser.parse(text)
 
     structs = []
@@ -144,6 +155,7 @@ def generate(inputfile, outputfile):
     fileContents = input.read()
     result = parse(fileContents)
     output = open(outputfile, "a")
+    output.truncate(0)
     output.write(result)
     input.close()
     output.close()

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="cairo-type-hints",
-    version="0.1.1",
+    version="0.1.7",
     author="Chris Baker",
     author_email="lxufimdu@pm.me",
     description="Generate type hints for Cairo lang",
@@ -11,7 +11,7 @@ setup(
     url="https://github.com/playmint/cairo-type-hints",
     packages=find_packages(),
     license="LICENSE",
-    requires=["lark"],
+    install_requires=["lark==0.12.0"],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
@@ -23,7 +23,7 @@ setup(
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Software Development"
     ],
     entry_points={"console_scripts": ["compile-cairo-type-hints = cairo_type_hints.console:main"]},
